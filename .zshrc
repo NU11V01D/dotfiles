@@ -1,18 +1,20 @@
-# Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1500
 setopt extendedglob
+setopt auto_cd
 bindkey -v
 
-# End of lines configured by zsh-newuser-install
-# The following lines were added by compinstall
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+
 zstyle :compinstall filename '/home/paulinux/.zshrc'
 
 autoload -Uz compinit
 compinit
 
 # End of lines added by compinstall
+
 source $HOME/antigen.zsh
 
 antigen bundle zsh-users/zsh-autosuggestions
@@ -21,3 +23,7 @@ antigen bundle zsh-users/zsh-syntax-highlighting
 antigen apply
 
 eval "$(starship init zsh)"
+
+export EDITOR=nvim
+
+alias dotfiles="git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
