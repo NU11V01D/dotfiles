@@ -27,3 +27,4 @@ eval "$(starship init zsh)"
 export EDITOR=nvim
 
 alias dotfiles="git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
+alias copywez="cp /mnt/c/Users/Paulo/.wezterm.lua ~/"
