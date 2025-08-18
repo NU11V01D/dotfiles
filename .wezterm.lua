@@ -1,116 +1,115 @@
+-- Initialize Configuratio
 local wezterm = require("wezterm")
+local config = wezterm.config_builder()
 local mux = wezterm.mux
-local act = wezterm.action
-local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+local opacity = 0.97
 
+config.automatically_reload_config = true
+config.check_for_updates = true
+
+--- Get the current operating system
+--- @return "windows"| "linux" | "macos"
+local function get_os()
+    local bin_format = package.cpath:match("%p[\\|/]?%p(%a+)")
+    if bin_format == "dll" then
+        return "windows"
+    elseif bin_format == "so" then
+        return "linux"
+    end
+
+    return "macos"
+end
+
+local host_os = get_os()
+
+-- Font Configuration
+local emoji_font = "Segoe UI Emoji"
+config.font = wezterm.font_with_fallback{
+    "CommitMonoVoid Nerd Font",
+    "Flog Symbols"
+}
+  harfbuzz_features = { "calt=1", "clig=1", "liga=1" }
+config.font_size = 9
+
+-- Color Configuration
+config.color_scheme = "Kanagawa (Gogh)"
+config.force_reverse_video_cursor = true
+
+-- Window Configuration
 wezterm.on("gui-startup", function(cmd)
   local tab, pane, window = mux.spawn_window(cmd or {})
   window:gui_window():maximize()
 end)
-
-config = wezterm.config_builder()
-
-config = {
-  automatically_reload_config = true,
-  -- Keys
-  disable_default_key_bindings = true,
-  leader = { key = "a", mods = "CTRL", timeout_milliseconds = 2000 },
-  -- Window
-  window_close_confirmation = "NeverPrompt",
-  window_decorations = "RESIZE",
-  default_cursor_style = "BlinkingBlock",
-  animation_fps = 1,
-  color_scheme = "Kanagawa (Gogh)",
-  font = wezterm.font_with_fallback {
-    "CommitMonoVoid Nerd Font",
-    "Flog Symbols"
-  },
-  harfbuzz_features = { "calt=1", "clig=1", "liga=1" },
-  font_size = 9,
-  use_fancy_tab_bar = false,
-  show_new_tab_button_in_tab_bar = false,
-  hide_tab_bar_if_only_one_tab = true,
-  tab_max_width = 50,
+config.window_padding = {
+  left = 0,
+  right = 0,
+  top = 0,
+  bottom = 0,
 }
+config.window_decorations = "RESIZE"
+config.window_background_opacity = opacity
+config.window_close_confirmation = "NeverPrompt"
+-- config.win32_system_backdrop = "Acrylic"
 
-config.default_prog = { "C:\\Program Files\\PowerShell\\7\\pwsh.exe" }
+-- Performance Settings
+config.cursor_blink_rate = 0
+config.front_end = "OpenGL"
+
+-- Tab Bar Configuration
+config.enable_tab_bar = true
+config.hide_tab_bar_if_only_one_tab = true
+config.show_tab_index_in_tab_bar = false
+config.use_fancy_tab_bar = false
+-- config.colors.tab_bar = {}
+
+-- Tab Formatting
+wezterm.on("format-tab-title", function(tab, _, _, _, hover)
+    local background = config.colors.brights[1]
+    local foreground = config.colors.foreground
+
+    if tab.is_active then
+        background = config.colors.brights[7]
+        foreground = config.colors.background
+    elseif hover then
+        background = config.colors.brights[8]
+        foreground = config.colors.background
+    end
+
+    local title = tostring(tab.tab_index + 1)
+    return {
+        { Foreground = { Color = background } },
+        { Text = " " },
+        { Background = { Color = background } },
+        { Foreground = { Color = foreground } },
+        { Text = title },
+        { Foreground = { Color = background } },
+        { Text = " " },
+    }
+end)
+
+-- Keybindings
+-- config.keys = {}
+
+-- Default Shell Configuration
+config.default_prog = { "pwsh", "-NoLogo" }
 
 config.wsl_domains = {
   {
     name = "WSL:FedoraLinux-42",
     distribution = "FedoraLinux-42",
     username = "paulinux",
-    default_cwd = "~",
+    default_cwd = "/home/paulinux/",
   },
 }
 
 config.default_domain = "WSL:FedoraLinux-42"
 
--- config.colors = {}
-
--- config.tab_bar_style = {}
-
-config.keys = {
-  { key = "l",     mods = "LEADER",                    action = act.ShowLauncher },
-  { key = "n",     mods = "LEADER",                    action = act.SpawnWindow },
-  { key = "f",     mods = "LEADER",                    action = act.ToggleFullScreen },
-  { key = "c",     mods = "LEADER|CTRL",               action = act.CopyTo("Clipboard") },
-  { key = "v",     mods = "CTRL",                      action = act.PasteFrom("Clipboard") },
-  { key = "Copy",  action = act.CopyTo("Clipboard") },
-  { key = "Paste", action = act.PasteFrom("Clipboard") },
-  { key = "w",     mods = "LEADER",                    action = act.CloseCurrentTab({ confirm = false }) },
-  { key = "t",     mods = "LEADER",                    action = act.SpawnTab("CurrentPaneDomain") },
-  { key = "T",     mods = "LEADER",                    action = act.SpawnTab("DefaultDomain") },
-  { key = "Tab",   mods = "CTRL",                      action = act.ActivateTabRelative(1) },
-  { key = "P",     mods = "LEADER",                    action = act.ActivateCommandPalette },
-  { key = "-",     mods = "CTRL",                      action = act.DecreaseFontSize },
-  { key = "=",     mods = "CTRL",                      action = act.IncreaseFontSize },
-  { key = "0",     mods = "CTRL",                      action = act.ResetFontSize },
-}
-
-config.window_padding = {
-  left = "0cell",
-  right = "0cell",
-  top = "0cell",
-  bottom = "0cell",
-}
-
-tabline.setup({
-  options = {
-    icons_enabled = true,
-    theme = config.color_scheme,
-    tabs_enabled = true,
-    theme_overrides = {},
-    section_separators = {
-      left = wezterm.nerdfonts.pl_left_hard_divider,
-      right = wezterm.nerdfonts.pl_right_hard_divider,
-    },
-    component_separators = {
-      left = wezterm.nerdfonts.pl_left_soft_divider,
-      right = wezterm.nerdfonts.pl_right_soft_divider,
-    },
-    tab_separators = {
-      left = wezterm.nerdfonts.pl_left_hard_divider,
-      right = wezterm.nerdfonts.pl_right_hard_divider,
-    },
-  },
-  sections = {
-    tabline_a = { "mode" },
-    tabline_b = { "workspace" },
-    tabline_c = { "hostname" },
-    tab_active = {
-      "index",
-      { "parent", padding = 0 },
-      ":",
-      { "cwd",    padding = { left = 0, right = 1 } },
-      { "zoomed", padding = 0 },
-    },
-    tab_inactive = { "index", { "process", padding = { left = 0, right = 1 } } },
-    tabline_x = { "ram", "cpu" },
-    tabline_y = { "datetime", "battery" },
-    tabline_z = { "domain" },
-  },
-  extensions = {},
-})
+-- OS-Specific Overrides
+if host_os == "linux" then
+    emoji_font = "Noto Color Emoji"
+    config.default_prog = { "zsh" }
+    config.front_end = "WebGpu"
+    config.window_decorations = nil -- use system decorations
+end
 
 return config
