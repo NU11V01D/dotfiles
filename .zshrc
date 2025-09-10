@@ -3,17 +3,21 @@ HISTSIZE=1000
 SAVEHIST=1500
 setopt extendedglob
 setopt auto_cd
-bindkey -v
+bindkey -e
 
 autoload -Uz compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
-zstyle :compinstall filename '/home/paulinux/.zshrc'
+zstyle :compinstall filename "$HOME/.zshrc"
 
 autoload -Uz compinit
 compinit
 
 # End of lines added by compinstall
+
+if [[ ! -f "$HOME/antigen.zsh" ]]; then
+  curl -L git.io/antigen > "$HOME/antigen.zsh"
+fi
 
 source $HOME/antigen.zsh
 
@@ -31,3 +35,7 @@ alias oldvi="\vi"
 
 alias dotfiles="git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 alias copywez="cp /mnt/c/Users/Paulo/.wezterm.lua ~/"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion

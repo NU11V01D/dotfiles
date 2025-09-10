@@ -51,7 +51,7 @@ symbol = ' '
 
 [character]
 format = "$symbol "
-success_symbol = "[](bold italic bright-blue)"
+success_symbol = "[](bold bright-blue)"
 error_symbol = "[](bright-purple)"
 vimcmd_symbol = "[:](bold green)"
 
