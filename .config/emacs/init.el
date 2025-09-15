@@ -1,4 +1,4 @@
-;;; init.el -*- lexical-binding: t; -*-
+;;; init.el --- My Emacs Config -*- lexical-binding: t; -*-
 ;;; Commentary:
 ;; Inspired by `emacs-kick' by LionyxML.
 
