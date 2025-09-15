@@ -1,5 +1,6 @@
 ;;; init.el -*- lexical-binding: t; -*-
-;; Inspired by `emacs-kick` by LionyxML.
+;;; Commentary:
+;; Inspired by `emacs-kick' by LionyxML.
 
 ;;; OPTIMIZATIONS
 ;; Increases the garbage collection threshold.
@@ -8,12 +9,15 @@
 (setq read-process-output-max (* 1024 1024 4))
 
 ;;; PACKAGE SETUP
-;; Makes it so you only need to ensure if you explicitly want to not load a package.
+;; Load package.el to ensure package-archives is defined
+(require 'package)
+;; Add MELPA as a package source
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+;; Initialize package system
+(package-initialize)
+;; Makes it so you only need to ensure if you explicitly want to not load a package
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
-
-;; Adds MELPA as a package source
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
 ;;; EMACS
 ;; TODO: Add comments until I figure out how to format ts.
@@ -58,7 +62,7 @@
     (set-face-attribute 'default nil :family "CommitMonoVoid" :height 130))
 
   ;; Save manual customizations to a separate file. Who thought cluttering
-  ;; `init.el` was a good idea? Honestly.
+  ;; `init.el' was a good idea? Honestly.
   (setq custom-file (locate-user-emacs-file "custom-vars.el"))
   (load custom-file 'noerror 'nomessage)
 
@@ -247,7 +251,7 @@
   :config
   ;; Customize the display of the current candidate in the completion list.
   ;; This will prefix the current candidate with “» ” to make it stand out.
-  ;; Copied from `emacs-kick` because I don't understand this part of the config.
+  ;; Copied from `emacs-kick' because I don't understand this part of the config.
   (advice-add #'vertico--format-candidate :around
               (lambda (orig cand prefix suffix index _start)
                 (setq cand (funcall orig cand prefix suffix index _start))
@@ -310,37 +314,154 @@
   :init (setq markdown "multimarkdown"))
 
 ;;; NERD-ICONS-CORFU
-
+(use-package nerd-icons-corfu
+  :defer t
+  :after (:all corfu))
 
 ;;; LSP
-
+;; Because `eglot' sucks, apparently.
+;; NOTE: Use `M-x install-server RET` to install/reinstall LSP.
+(use-package lsp-mode
+  :defer t
+  :hook (
+		 (lsp-mode . lsp-enable-which-key-integration)
+		 ((js-mode
+		   tsx-ts-mode
+		   typescript-ts-base-mode
+		   css-mode
+		   js-ts-mode
+		   ruby-base-mode
+		   rust-ts-mode
+		   web-mode) . lsp-deferred))
+  :commands lsp
+  :custom
+  (lsp-keymap-prefix "C-c l")                           ;; Set the prefix for LSP commands.
+  (lsp-inlay-hint-enable nil)                           ;; Usage of inlay hints.
+  (lsp-completion-provider :none)                       ;; Disable the default completion provider.
+  (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
+  (lsp-log-io nil)                                      ;; Disable IO logging for speed.
+  (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
+  (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
+  ;; Core settings
+  (lsp-enable-xref t)                                   ;; Enable cross-references.
+  (lsp-auto-configure t)                                ;; Automatically configure LSP.
+  (lsp-enable-links nil)                                ;; Disable links.
+  (lsp-eldoc-enable-hover t)                            ;; Enable ElDoc hover.
+  (lsp-enable-file-watchers nil)                        ;; Disable file watchers.
+  (lsp-enable-folding nil)                              ;; Disable folding.
+  (lsp-enable-imenu t)                                  ;; Enable Imenu support.
+  (lsp-enable-indentation nil)                          ;; Disable indentation.
+  (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
+  (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
+  (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
+  (lsp-enable-text-document-color t)                    ;; Enable text document color.
+  ;; Modeline settings
+  (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
+  (lsp-modeline-diagnostics-enable nil)                 ;; Use `flymake' instead.
+  (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
+  (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
+  (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
+  ;; Completion settings
+  (lsp-completion-enable t)                             ;; Enable completion.
+  (lsp-completion-enable-additional-text-edit t)        ;; Enable additional text edits for completions.
+  (lsp-enable-snippet nil)                              ;; Disable snippets
+  (lsp-completion-show-kind t)                          ;; Show kind in completions.
+  ;; Lens settings
+  (lsp-lens-enable t)                                   ;; Enable lens support.
+  ;; Headerline settings
+  (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
+  (lsp-headerline-arrow "?")                            ;; Set arrow for headerline.
+  (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
+  (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
+  ;; Semantic settings
+  (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
 
 ;;; LSP Additional Servers
-
+;; For things like `lsp-tailwindcss'.
+(use-package lsp-tailwindcss
+  :defer t
+  :config
+  (add-to-list 'lsp-language-id-configuration '(".*\\.erb$" . "html"))
+  :init
+  (setq lsp-tailwindcss-add-on-mode t))
 
 ;;; ELDOC-BOX
-
+;; Popup box for docs.
+(use-package eldoc-box
+  :defer t)
 
 ;;; DIFF-HL
-
+;; Like `gitsigns.nvim' for Emacs. Just that this came before(?)
+(use-package diff-hl
+  :defer t
+  :hook
+  (find-file . (lambda ()
+				 (global-diff-hl-mode)    ;; Enable Diff-HL mode for all files.
+				 (diff-hl-flydiff-mode)   ;; Automatically refresh diffs.
+				 (diff-hl-margin-mode)))  ;; Show diff indicators in margin.
+  :custom
+  (diff-hl-side 'left)
+  (diff-hl-margin-symbols-alist '((insert . "+")
+								  (delete . "-")
+								  (change . "~")
+								  (unknown . "?")
+								  (ignored . "i"))))
 
 ;;; MAGIT
-
+;; The OG. The dad of `fugitive.vim' or the other GOAT, `neogit'.
+;; Fitting for the Git wizard I am!
+(use-package magit
+  :config
+  (setopt magit-format-file-function #'magit-format-file-nerd-icons)
+  :defer t)
 
 ;;; INDENT-GUIDE
-
+(use-package indent-guide
+  :defer t
+  :hook
+  (prog-mode . indent-guide-mode)
+  :config
+  (setq indent-guide-char "│"))
 
 ;;; ADD-NODE-MODULES-PATH
-
+;; Ensures Emacs uses the local `node_modules' to make working with projects
+;; using different versions of tools more manageable.
+(use-package add-node-modules-path
+  :defer t
+  :custom
+  (eval-after-load 'typescript-ts-mode
+    '(add-hook 'typescript-ts-mode-hook #'add-node-modules-path))
+  (eval-after-load 'tsx-ts-mode
+    '(add-hook 'tsx-ts-mode-hook #'add-node-modules-path))
+  (eval-after-load 'typescriptreact-mode
+    '(add-hook 'typescriptreact-mode-hook #'add-node-modules-path))
+  (eval-after-load 'js-mode
+    '(add-hook 'js-mode-hook #'add-node-modules-path)))
 
 ;;; UNDO TREE
-
+;; Makes managing changes in buffers easier by displaying the undo history
+;; as a tree. We, software devs, care a lot about trees.
+(use-package undo-tree
+  :defer t
+  :hook
+  (after-init . global-undo-tree-mode)
+  :init
+  (setq undo-tree-visualizer-timestamps t
+		undo-tree-visualizer-diff t
+		undo-limit 800000
+		undo-strong-limit 12000000
+		undo-outer-limit 120000000)
+  :config
+  (setq undo-tree-history-directory-alist '(("." . "~/.config/emacs/.cache/undo"))))
 
 ;;; DOTENV
-
+;; A major mode for .env files.
+(use-package dotenv-mode
+  :defer t
+  :config)
 
 ;;; DOOM MODELINE
-;; The mode-line I tried to copy in Neovim using `lualine.nvim`.
+;; The mode-line I tried to copy in Neovim using `lualine.nvim'.
 (use-package doom-modeline
   :defer t
   :custom
@@ -364,11 +485,15 @@
   (dired-mode . nerd-icons-dired-mode))
 
 ;;; NERD ICONS COMPLETION
-
+(use-package nerd-icons-completion
+  :after (:all nerd-icons marginalia)
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
 ;;; DOOM THEMES
 (use-package doom-themes
   :config
-  (load-theme 'doom-one t)
+  (load-theme 'doom-one t))
 
 ;;; init.el ends here
