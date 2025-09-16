@@ -10,6 +10,13 @@
 # Source Neovim
 [[ -d "/opt/nvim-linux-x86_64/bin" ]] && PATH="/opt/nvim-linux-x86_64/bin:$PATH"
 
+# Source MacPorts
+[[ -d "/opt/local/bin" ]] && PATH="/opt/local/bin:$PATH"
+[[ -d "/opt/local/sbin" ]] && PATH="/opt/local/sbin:$PATH"
+
+# Source Instant Client
+[[ -d "$HOME/instantclient/11.2" ]] && PATH="$HOME/instantclient/11.2:$PATH"
+
 typeset -U path
 path=(${(s.:.)PATH})
 export PATH="${(j.:.)path}"
