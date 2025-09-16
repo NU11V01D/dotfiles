@@ -1,6 +1,7 @@
 ;;; init.el --- My Emacs Config -*- lexical-binding: t; -*-
+;;; Author: NU11V01D
 ;;; Commentary:
-;;; Inspired by `emacs-knick' by LionyxML.
+;;; Inspired by `emacs-kick' by LionyxML.
 
 ;;; Code:
 
@@ -60,7 +61,9 @@
   ;; some weird fuckery with the terminal.
   (set-face-attribute 'default nil :family "CommitMonoVoid" :height 100)
   (when (eq system-type 'darwin)
-    ;; (setq mac-command-modifier 'meta)
+    (setq mac-command-modifier 'meta)
+	(setq mac-right-command-modifier 'super)
+	(setq mac-option-modifier nil)
     (set-face-attribute 'default nil :family "CommitMonoVoid" :height 130))
 
   ;; Save manual customizations to a separate file. Who thought cluttering
@@ -431,6 +434,7 @@
 ;; The OG. The dad of `fugitive.vim' or the other GOAT, `neogit'.
 ;; Fitting for the Git wizard I am!
 (use-package magit
+  :after nerd-icons
   :config
   (setopt magit-format-file-function #'magit-format-file-nerd-icons)
   :defer t)
@@ -511,12 +515,40 @@
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
-;;; DOOM THEMES
+;;; EAT
+;; A fast terminal emulator for Emacs.
+(use-package eat
+  :hook
+  (add-hook 'eshell-load-hook #'eat-eshell-mode)
+  (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode))
+
+;;; EXEC-PATH-FROM-SHELL
+;; Sets the `exec-path' variable from my `$SHELL'.
+(use-package exec-path-from-shell
+  :init
+  (if (or (memq window-system '(mac ns x)) (daemonp))
+	  (exec-path-from-shell-initialize)))
+
+;;; THEMES
+;; DOOM THEMES: Long-ass collection of cool themes made by the devs of Doom Emacs.
 (use-package doom-themes
   :config
   (load-theme 'doom-one t))
 
 ;;; ============ CUSTOM FUNCTIONS =============
 ;; Some custom functions for the config.
+(defun dotfiles ()
+  "Open Magit status for managing dotfiles."
+  (interactive)
+  (let ((magit-git-global-arguments
+         (append magit-git-global-arguments
+                 (list (concat "--git-dir=" (expand-file-name "~/.dotfiles/"))
+                       (concat "--work-tree=" (expand-file-name "~"))))))
+    (magit-status)))
 
+;; Local Variables:
+;; outline-minor-mode-cycle: t
+;; outline-regexp: ";;; "
+;; eval: (outline-minor-mode)
+;; End:
 ;;; init.el ends here
