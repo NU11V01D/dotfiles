@@ -1,6 +1,8 @@
 ;;; init.el --- My Emacs Config -*- lexical-binding: t; -*-
 ;;; Commentary:
-;; Inspired by `emacs-kick' by LionyxML.
+;;; Inspired by `emacs-knick' by LionyxML.
+
+;;; Code:
 
 ;;; OPTIMIZATIONS
 ;; Increases the garbage collection threshold.
@@ -216,7 +218,7 @@
 ;; Built-in keybinds helper. Oh, Emacs, you didn't have to!
 (use-package which-key
   :ensure nil
-  :defet t
+  :defer t
   :hook
   (after-init . which-key-mode))
 
@@ -226,7 +228,7 @@
 ;; Emacs.
 (use-package org
   :ensure nil
-  :defet t)
+  :defer t)
 
 ;;; ============ EXTERNAL PACKAGES ============
 
@@ -312,6 +314,24 @@
   :defer t
   :mode ("README\\.md\\'" . gfm-mode)
   :init (setq markdown "multimarkdown"))
+
+;;; CORFU
+;; Text completion framework--similar to blink.cmp, but better.
+(use-package corfu
+  :defer t
+  :custom
+  (corfu-auto nil)
+  (corfu-auto-prefix 1)
+  (corfu-quit-no-match t)
+  (corfu-scroll-margin 5)
+  (corfu-max-width 50)
+  (corfu-min-width 50)
+  (corfu-popupinfo-delay 0.5)
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
+  :init
+  (global-corfu-mode)
+  (corfu-popupinfo-mode t))
 
 ;;; NERD-ICONS-CORFU
 (use-package nerd-icons-corfu
@@ -495,5 +515,8 @@
 (use-package doom-themes
   :config
   (load-theme 'doom-one t))
+
+;;; ============ CUSTOM FUNCTIONS =============
+;; Some custom functions for the config.
 
 ;;; init.el ends here
