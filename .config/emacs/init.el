@@ -1,11 +1,16 @@
 ;;; init.el --- My Emacs Config -*- lexical-binding: t; -*-
-;;; Author: NU11V01D
+;; Author: NU11V01D
+
+;; Package-Requires: ((emacs "30.1"))
+;; License: MIT
+
 ;;; Commentary:
-;;; Inspired by `emacs-kick' by LionyxML.
+;; Inspired by `emacs-kick' by LionyxML.  This is my personal config
+;; for Emacs.
 
 ;;; Code:
 
-;;; OPTIMIZATIONS
+;; This config is fast thanks to lazy loading.
 ;; Increases the garbage collection threshold.
 (setq gc-cons-threshold #x40000000)
 ;; Sets maximum output size for reading process output.
@@ -23,7 +28,6 @@
 (setq use-package-always-ensure t)
 
 ;;; EMACS
-;; TODO: Add comments until I figure out how to format ts.
 (use-package emacs
   :ensure nil
   :custom
@@ -53,6 +57,8 @@
   :hook
   ;; Enable line numbers in programming modes.
   (prog-mode . display-line-numbers-mode)
+  ;; Set fill-column size per major mode.
+  (emacs-lisp-mode . (lambda () (setq fill-column 72)))
 
   :config
   ;; Configure font settings based on the OS. Also, Neovim is objectively
@@ -64,7 +70,7 @@
     (setq mac-command-modifier 'meta)
 	(setq mac-right-command-modifier 'super)
 	(setq mac-option-modifier nil)
-    (set-face-attribute 'default nil :family "CommitMonoVoid" :height 130))
+	(set-face-attribute 'default nil :family "CommitMonoVoid" :height 130))
 
   ;; Save manual customizations to a separate file. Who thought cluttering
   ;; `init.el' was a good idea? Honestly.
@@ -73,6 +79,10 @@
 
   ;; Changes Emacs vertical divisor for some reason.
   (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))
+
+  ;; Adds support for `imenu' on config file.
+  (add-hook 'emacs-lisp-mode-hook 'imenu-add-menubar-index)
+  (setq imenu-auto-rescan t)  ; Keeps index fresh on changes
 
   :init
   (tool-bar-mode -1)
@@ -96,17 +106,17 @@
 
   ;; Hook to run something after Emacs initializes.
   (add-hook 'after-init-hook
-	    (lambda ()
-	      (message "Emacs has loaded.")
-	      (with-current-buffer (get-buffer-create "*scratch*")
-		(insert (format
-			 ";;    Welcome to Emacs!
+			(lambda ()
+			  (message "Emacs has loaded.")
+			  (with-current-buffer (get-buffer-create "*scratch*")
+				(insert (format
+						 ";;    Welcome to Emacs!
 ;;
 ;;    Loading time : %s
 ;;    Packages     : %s
 "
-			 (emacs-init-time)
-			 (number-to-string (length package-activated-list))))))))
+						 (emacs-init-time)
+						 (number-to-string (length package-activated-list))))))))
 
 ;;; WINDOW
 (use-package window
@@ -156,7 +166,7 @@
   (when (eq system-type 'darwin)
     (let ((gls (executable-find "gls")))
       (when gls
-	(setq insert-directory-program gls)))))
+		(setq insert-directory-program gls)))))
 
 ;;; ISEARCH
 (use-package isearch
@@ -167,7 +177,7 @@
   (setq lazy-count-suffix-format nil)
   (setq search-whitespace-regexp ".*?")
   :bind (("C-s" . isearch-forward)
-	 ("C-r" . isearch-backward)))
+		 ("C-r" . isearch-backward)))
 
 ;;; VC
 ;; Built-in version control, tho it will be used alongside Magit.
@@ -202,10 +212,10 @@
   :ensure nil
   :defer t
   :bind (:map smerge-mode-map
-	      ("C-c ^ u" . smerge-keep-upper)
-	      ("C-c ^ l" . smerge-keep-lower)
-	      ("C-c ^ n" . smerge-next)
-	      ("C-c ^ p" . smerge-previous)))
+			  ("C-c ^ u" . smerge-keep-upper)
+			  ("C-c ^ l" . smerge-keep-lower)
+			  ("C-c ^ n" . smerge-next)
+			  ("C-c ^ p" . smerge-previous)))
 
 ;;; ELDOC
 ;; Built-in inline documentation for functions and variables in minibuffer.
@@ -271,8 +281,8 @@
   :after vertico
   :init
   (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles partial-completion)))))
+		completion-category-defaults nil
+		completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package marginalia
   :hook
@@ -287,7 +297,7 @@
   (advice-add #'register-preview :override #'consult-register-window)
   ;; Use Consult for xref locations with a preview feature.
   (setq xref-show-xrefs-function #'consult-xref
-	xref-show-definitions-function #'consult-xref))
+		xref-show-definitions-function #'consult-xref))
 
 ;;; EMBARK
 ;; Provides a contextual action menu for Emacs.
@@ -493,6 +503,8 @@
   (doom-modeline-project-detection 'project)
   (doom-modeline-buffer-name t)
   (doom-modeline-vcs-max-length 25)
+  (setq doom-modeline-project-name t)
+  (setq doom-modeline-height 27)
   :hook
   (after-init . doom-modeline-mode))
 
@@ -511,6 +523,7 @@
 ;;; NERD ICONS COMPLETION
 (use-package nerd-icons-completion
   :after (:all nerd-icons marginalia)
+  :hook (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
@@ -519,8 +532,8 @@
 ;; A fast terminal emulator for Emacs.
 (use-package eat
   :hook
-  (add-hook 'eshell-load-hook #'eat-eshell-mode)
-  (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode))
+  (eshell-load . eat-eshell-mode)
+  (eshell-load . eat-eshell-visual-command-mode))
 
 ;;; EXEC-PATH-FROM-SHELL
 ;; Sets the `exec-path' variable from my `$SHELL'.
@@ -535,20 +548,32 @@
   :config
   (load-theme 'doom-one t))
 
-;;; ============ CUSTOM FUNCTIONS =============
-;; Some custom functions for the config.
-(defun dotfiles ()
-  "Open Magit status for managing dotfiles."
-  (interactive)
-  (let ((magit-git-global-arguments
-         (append magit-git-global-arguments
-                 (list (concat "--git-dir=" (expand-file-name "~/.dotfiles/"))
-                       (concat "--work-tree=" (expand-file-name "~"))))))
-    (magit-status)))
+;;; CUSTOM FUNCTIONS
+;; For functions that don't fit somewhere else
+
+  ;; Function to manage dotfiles taken from a Magit issue.
+  (defun my/magit-process-environment (env)
+	"Detect and set git -bare repo env vars when in tracked dotfile directories."
+	(let* ((default (file-name-as-directory (expand-file-name default-directory)))
+           (git-dir (expand-file-name "~/.dotfiles/"))
+           (work-tree (expand-file-name "~/"))
+           (dotfile-dirs
+			(seq-map (apply-partially 'concat work-tree)
+                  (seq-uniq (seq-keep #'file-name-directory (split-string (shell-command-to-string
+																	 (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
+																			 git-dir work-tree))))))))
+      (push work-tree dotfile-dirs)
+      (when (member default dotfile-dirs)
+		(push (format "GIT_WORK_TREE=%s" work-tree) env)
+		(push (format "GIT_DIR=%s" git-dir) env)))
+	env)
+
+  (advice-add 'magit-process-environment
+              :filter-return #'my/magit-process-environment)
 
 ;; Local Variables:
 ;; outline-minor-mode-cycle: t
-;; outline-regexp: ";;; "
+;; outline-regexp: ";;+ "
 ;; eval: (outline-minor-mode)
 ;; End:
 ;;; init.el ends here
