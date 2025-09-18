@@ -68,7 +68,7 @@
   (set-face-attribute 'default nil :family "CommitMonoVoid" :height 100)
   (when (eq system-type 'darwin)
     (setq mac-command-modifier 'meta)
-	(setq mac-right-command-modifier 'super)
+	(setq mac-right-command-modifier 'control)
 	(setq mac-option-modifier nil)
 	(set-face-attribute 'default nil :family "CommitMonoVoid" :height 130))
 
@@ -446,8 +446,7 @@
 (use-package magit
   :after nerd-icons
   :config
-  (setopt magit-format-file-function #'magit-format-file-nerd-icons)
-  :defer t)
+  (setopt magit-format-file-function #'magit-format-file-nerd-icons))
 
 ;;; INDENT-GUIDE
 (use-package indent-guide
@@ -503,8 +502,8 @@
   (doom-modeline-project-detection 'project)
   (doom-modeline-buffer-name t)
   (doom-modeline-vcs-max-length 25)
-  (setq doom-modeline-project-name t)
-  (setq doom-modeline-height 27)
+  (doom-modeline-project-name t)
+  (doom-modeline-height 27)
   :hook
   (after-init . doom-modeline-mode))
 
@@ -531,6 +530,8 @@
 ;;; EAT
 ;; A fast terminal emulator for Emacs.
 (use-package eat
+  :config
+  (setq eat-term-name "xterm-256color")
   :hook
   (eshell-load . eat-eshell-mode)
   (eshell-load . eat-eshell-visual-command-mode))
@@ -551,25 +552,25 @@
 ;;; CUSTOM FUNCTIONS
 ;; For functions that don't fit somewhere else
 
-  ;; Function to manage dotfiles taken from a Magit issue.
-  (defun my/magit-process-environment (env)
-	"Detect and set git -bare repo env vars when in tracked dotfile directories."
-	(let* ((default (file-name-as-directory (expand-file-name default-directory)))
-           (git-dir (expand-file-name "~/.dotfiles/"))
-           (work-tree (expand-file-name "~/"))
-           (dotfile-dirs
-			(seq-map (apply-partially 'concat work-tree)
-                  (seq-uniq (seq-keep #'file-name-directory (split-string (shell-command-to-string
-																	 (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
-																			 git-dir work-tree))))))))
-      (push work-tree dotfile-dirs)
-      (when (member default dotfile-dirs)
-		(push (format "GIT_WORK_TREE=%s" work-tree) env)
-		(push (format "GIT_DIR=%s" git-dir) env)))
-	env)
+;; Function to manage dotfiles taken from a Magit issue.
+(defun my/magit-process-environment (env)
+  "Detect and set git -bare repo ENV vars when in tracked dotfile directories."
+  (let* ((default (file-name-as-directory (expand-file-name default-directory)))
+         (git-dir (expand-file-name "~/.dotfiles/"))
+         (work-tree (expand-file-name "~/"))
+         (dotfile-dirs
+		  (seq-map (apply-partially 'concat work-tree)
+                   (seq-uniq (seq-keep #'file-name-directory (split-string (shell-command-to-string
+																			(format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
+																					git-dir work-tree))))))))
+    (push work-tree dotfile-dirs)
+    (when (member default dotfile-dirs)
+	  (push (format "GIT_WORK_TREE=%s" work-tree) env)
+	  (push (format "GIT_DIR=%s" git-dir) env)))
+  env)
 
-  (advice-add 'magit-process-environment
-              :filter-return #'my/magit-process-environment)
+(advice-add 'magit-process-environment
+            :filter-return #'my/magit-process-environment)
 
 ;; Local Variables:
 ;; outline-minor-mode-cycle: t
