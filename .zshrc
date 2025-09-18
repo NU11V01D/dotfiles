@@ -15,20 +15,30 @@ compinit
 
 # End of lines added by compinstall
 
-if [[ ! -f "$HOME/antigen.zsh" ]]; then
-  curl -L git.io/antigen > "$HOME/antigen.zsh"
-fi
+## Antidote setup
 
-source $HOME/antigen.zsh
+[[ -e $HOME/.antidote ]] ||
+	git clone --depth=1 https://github.com/mattmc3/antidote.git $HOME/.antidote
 
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle zsh-users/zsh-syntax-highlighting
+source $HOME/.antidote/antidote.zsh
+source <(antidote init)
 
-antigen apply
+# Antidote packages
+
+antidote bundle zsh-users/zsh-autosuggestions
+antidote bundle zsh-users/zsh-syntax-highlighting
+
+antidote load
+
+## Starship init
 
 eval "$(starship init zsh)"
 
+## Variables
+
 export EDITOR=nvim
+
+# Aliases
 
 alias vi="nvim"
 alias oldvi="\vi"

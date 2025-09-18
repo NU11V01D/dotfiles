@@ -297,7 +297,18 @@
   (advice-add #'register-preview :override #'consult-register-window)
   ;; Use Consult for xref locations with a preview feature.
   (setq xref-show-xrefs-function #'consult-xref
-		xref-show-definitions-function #'consult-xref))
+		xref-show-definitions-function #'consult-xref)
+  :bind
+  ;; We unset the default Emacs keybinds for these actions.
+  (("C-x b" . nil)
+   ("C-x p b" . nil)
+   ("M-g g". nil)
+   ("M-g i" . nil)
+   ;; We replace said keybinds with the Consult alternative.
+   ("C-x b" . consult-buffer)
+   ("C-x p b" . consult-project-buffer)
+   ("M-g g". consult-goto-line)
+   ("M-g i" . consult-imenu)))
 
 ;;; EMBARK
 ;; Provides a contextual action menu for Emacs.
@@ -454,7 +465,7 @@
   :hook
   (prog-mode . indent-guide-mode)
   :config
-  (setq indent-guide-char "│"))
+  (setq indent-guide-char ":"))
 
 ;;; ADD-NODE-MODULES-PATH
 ;; Ensures Emacs uses the local `node_modules' to make working with projects
@@ -574,7 +585,7 @@
 
 ;; Local Variables:
 ;; outline-minor-mode-cycle: t
-;; outline-regexp: ";;+ "
+;; outline-regexp: ";;+"
 ;; eval: (outline-minor-mode)
 ;; End:
 ;;; init.el ends here
