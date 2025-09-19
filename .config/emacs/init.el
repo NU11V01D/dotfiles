@@ -17,6 +17,8 @@
 (setq read-process-output-max (* 1024 1024 4))
 
 ;;; PACKAGE SETUP
+;; Set support for `imenu' before loading package.
+(setq use-package-enable-imenu-support t)
 ;; Load package.el to ensure package-archives is defined
 (require 'package)
 ;; Add MELPA as a package source
@@ -70,7 +72,13 @@
     (setq mac-command-modifier 'meta)
 	(setq mac-right-command-modifier 'control)
 	(setq mac-option-modifier nil)
-	(set-face-attribute 'default nil :family "CommitMonoVoid" :height 130))
+	(set-face-attribute 'default nil :family "CommitMonoVoid" :height 130)
+	(add-to-list 'default-frame-alist '(alpha-background . 90))
+	(add-to-list 'default-frame-alist '(fullscreen . maximized)))
+  (when (eq system-type 'gnu/linux)
+	(setq default-frame-alist '((undecorated . t)))
+	(add-to-list 'default-frame-alist '(alpha-background . 95))
+	(add-to-list 'default-frame-alist '(fullscreen . maximized)))
 
   ;; Save manual customizations to a separate file. Who thought cluttering
   ;; `init.el' was a good idea? Honestly.
@@ -190,6 +198,7 @@
    ("C-x v D" . vc-root-diff)
    ("C-x v v" . vc-next-action))
   :config
+  (setq auto-revert-check-vc-info t)
   (setq vc-annotate-color-map
         '((20 . "#f5e0dc")
           (40 . "#f2cdcd")
@@ -438,6 +447,7 @@
 ;; Like `gitsigns.nvim' for Emacs. Just that this came before(?)
 (use-package diff-hl
   :defer t
+  :after magit
   :hook
   (find-file . (lambda ()
 				 (global-diff-hl-mode)    ;; Enable Diff-HL mode for all files.
@@ -449,7 +459,8 @@
 								  (delete . "-")
 								  (change . "~")
 								  (unknown . "?")
-								  (ignored . "i"))))
+								  (ignored . "!")
+								  (reference . "i"))))
 
 ;;; MAGIT
 ;; The OG. The dad of `fugitive.vim' or the other GOAT, `neogit'.
@@ -465,7 +476,7 @@
   :hook
   (prog-mode . indent-guide-mode)
   :config
-  (setq indent-guide-char ":"))
+  (setq indent-guide-char "|"))
 
 ;;; ADD-NODE-MODULES-PATH
 ;; Ensures Emacs uses the local `node_modules' to make working with projects
@@ -558,7 +569,11 @@
 ;; DOOM THEMES: Long-ass collection of cool themes made by the devs of Doom Emacs.
 (use-package doom-themes
   :config
-  (load-theme 'doom-one t))
+  (load-theme 'doom-vibrant t))
+(use-package ef-themes)
+(use-package kaolin-themes)
+(use-package zenburn-theme)
+(use-package inkpot-theme)
 
 ;;; CUSTOM FUNCTIONS
 ;; For functions that don't fit somewhere else
