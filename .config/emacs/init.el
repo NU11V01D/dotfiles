@@ -70,10 +70,11 @@
   (set-face-attribute 'default nil :family "CommitMonoVoid" :height 100)
   (when (eq system-type 'darwin)
     (setq mac-command-modifier 'meta)
-	(setq mac-right-command-modifier 'control)
+	(setq mac-right-command-modifier 'super)
 	(setq mac-option-modifier nil)
 	(set-face-attribute 'default nil :family "CommitMonoVoid" :height 130)
-	(add-to-list 'default-frame-alist '(alpha-background . 90))
+	(add-to-list 'default-frame-alist '(ns-transparent-titlebar t))
+	(add-to-list 'default-frame-alist '(alpha-background . 95))
 	(add-to-list 'default-frame-alist '(fullscreen . maximized)))
   (when (eq system-type 'gnu/linux)
 	(setq default-frame-alist '((undecorated . t)))
@@ -307,17 +308,51 @@
   ;; Use Consult for xref locations with a preview feature.
   (setq xref-show-xrefs-function #'consult-xref
 		xref-show-definitions-function #'consult-xref)
-  :bind
-  ;; We unset the default Emacs keybinds for these actions.
-  (("C-x b" . nil)
-   ("C-x p b" . nil)
-   ("M-g g". nil)
-   ("M-g i" . nil)
-   ;; We replace said keybinds with the Consult alternative.
-   ("C-x b" . consult-buffer)
-   ("C-x p b" . consult-project-buffer)
-   ("M-g g". consult-goto-line)
-   ("M-g i" . consult-imenu)))
+  :bind (;; C-c bindings in `mode-specific-map'
+		 ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+		 ("C-c t" . consult-theme)
+         ([remap Info-search] . consult-info)
+		 ;; C-x bindings in `ctrl-x-map'
+		 ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+		 ;; M-g bindings in `goto-map'
+         ("M-g e" . consult-compile-error)
+         ("M-g r" . consult-grep-match)
+         ("M-g f" . consult-flycheck)               ;; Alternative: consult-flymake
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)
+		 ("M-g O" . consult-org-heading)
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)))          ;; needed by consult-line to detect isearch
+
+;; CONSULT-FLYCHECK
+;; Integrates `consult' with `flycheck'.
+(use-package consult-flycheck)
+
+;; CONSULT-TODO
+;; Highlights `TODO' keywords.
+(use-package consult-todo
+  :after hl-todo
+  :demand t)
 
 ;;; EMBARK
 ;; Provides a contextual action menu for Emacs.
@@ -468,7 +503,32 @@
 (use-package magit
   :after nerd-icons
   :config
-  (setopt magit-format-file-function #'magit-format-file-nerd-icons))
+  (setopt magit-format-file-function #'magit-format-file-nerd-icons)
+  
+  ;; Function to manage dotfiles taken from a Magit issue.
+  (defun my/magit-process-environment (env)
+	"Detect and set git -bare repo ENV vars when in tracked dotfile directories."
+	(let* ((default (file-name-as-directory (expand-file-name default-directory)))
+           (git-dir (expand-file-name "~/.dotfiles/"))
+           (work-tree (expand-file-name "~/"))
+           (dotfile-dirs
+			(seq-map (apply-partially 'concat work-tree)
+					 (seq-uniq (seq-keep #'file-name-directory (split-string (shell-command-to-string
+																			  (format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
+																					  git-dir work-tree))))))))
+      (push work-tree dotfile-dirs)
+      (when (member default dotfile-dirs)
+		(push (format "GIT_WORK_TREE=%s" work-tree) env)
+		(push (format "GIT_DIR=%s" git-dir) env)))
+	env)
+
+  (advice-add 'magit-process-environment
+              :filter-return #'my/magit-process-environment))
+
+;;; HL-TODO
+(use-package hl-todo
+  :hook
+  (prog-mode . hl-todo-mode))
 
 ;;; INDENT-GUIDE
 (use-package indent-guide
@@ -566,41 +626,17 @@
 	  (exec-path-from-shell-initialize)))
 
 ;;; THEMES
-;; DOOM THEMES: Long-ass collection of cool themes made by the devs of Doom Emacs.
+;; DOOM THEMES
+;; Long-ass collection of cool themes made by the devs of Doom Emacs.
 (use-package doom-themes
   :config
   (load-theme 'doom-vibrant t))
 (use-package ef-themes)
 (use-package kaolin-themes)
-(use-package zenburn-theme)
-(use-package inkpot-theme)
-
-;;; CUSTOM FUNCTIONS
-;; For functions that don't fit somewhere else
-
-;; Function to manage dotfiles taken from a Magit issue.
-(defun my/magit-process-environment (env)
-  "Detect and set git -bare repo ENV vars when in tracked dotfile directories."
-  (let* ((default (file-name-as-directory (expand-file-name default-directory)))
-         (git-dir (expand-file-name "~/.dotfiles/"))
-         (work-tree (expand-file-name "~/"))
-         (dotfile-dirs
-		  (seq-map (apply-partially 'concat work-tree)
-                   (seq-uniq (seq-keep #'file-name-directory (split-string (shell-command-to-string
-																			(format "/usr/bin/git --git-dir=%s --work-tree=%s ls-tree --full-tree --name-only -r HEAD"
-																					git-dir work-tree))))))))
-    (push work-tree dotfile-dirs)
-    (when (member default dotfile-dirs)
-	  (push (format "GIT_WORK_TREE=%s" work-tree) env)
-	  (push (format "GIT_DIR=%s" git-dir) env)))
-  env)
-
-(advice-add 'magit-process-environment
-            :filter-return #'my/magit-process-environment)
 
 ;; Local Variables:
 ;; outline-minor-mode-cycle: t
-;; outline-regexp: ";;+"
+;; outline-regexp: ";;+\\s-\\([A-Z -]+\\)$"
 ;; eval: (outline-minor-mode)
 ;; End:
 ;;; init.el ends here
