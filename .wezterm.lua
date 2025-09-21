@@ -2,7 +2,7 @@
 local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 local mux = wezterm.mux
-local opacity = 0.85
+local opacity
 
 config.automatically_reload_config = true
 config.check_for_updates = true
@@ -27,17 +27,21 @@ wezterm.log_info("Detected OS:" .. host_os)
 
 -- OS-Specific Overrides
 if host_os == "linux" then
+	opacity = 0.90
+	config.font_size = 12
 	config.default_prog = { "zsh" }
 	config.front_end = "WebGpu"
 	config.window_decorations = nil -- use system decorations
 elseif host_os == "macos" then
 	opacity = 0.85
+	config.font_size = 14
 	config.default_prog = { "zsh" }
 	config.default_domain = nil
 	config.window_decorations = "RESIZE"
 	config.macos_window_background_blur = 50
 elseif host_os == "windows" then
-	-- Default Shell Configuration
+	opacity = 0.95
+	config.font_size = 9
 	config.default_prog = { "pwsh", "-NoLogo" }
 	config.wsl_domains = {
 		{
@@ -48,6 +52,7 @@ elseif host_os == "windows" then
 		},
 	}
 	config.default_domain = "WSL:FedoraLinux-42"
+	config.window_decorations = "RESIZE"
 end
 
 -- Font Configuration
@@ -58,7 +63,6 @@ config.font = wezterm.font_with_fallback({
 	"Flog Symbols",
 })
 harfbuzz_features = { "calt=1", "clig=1", "liga=1" }
-config.font_size = 14
 
 -- Color Configuration
 config.color_scheme = "Kanagawa (Gogh)"

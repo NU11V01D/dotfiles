@@ -44,7 +44,8 @@ alias vi="nvim"
 alias oldvi="\vi"
 
 alias dotfiles="git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
-alias copywez="cp /mnt/c/Users/Paulo/.wezterm.lua ~/"
+alias cpwezlinux="cp /mnt/c/Users/Paulo/.wezterm.lua ~/"
+alias cpwezwin="cp ~/.wezterm.lua /mnt/c/Users/Paulo/"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
